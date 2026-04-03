@@ -1,5 +1,6 @@
 import cv2
 import time
+from emailing import send_email
 
 video = cv2.VideoCapture(0)
 
@@ -7,8 +8,10 @@ video = cv2.VideoCapture(0)
 time.sleep(1)
 
 first_frame = None
+status_list = []
 
 while True:
+    status = 0
     check, frame = video.read()
 
     # Transform it to grayscale
@@ -42,7 +45,23 @@ while True:
         x, y, w, h = cv2.boundingRect(contour)
 
         # Draw the rectangle around the original frame
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 3)
+        rectangle = cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 3)
+
+        # If an object is detected and a rectangle is created, call the function
+        if rectangle.any():
+            status = 1
+
+
+    status_list.append(status)
+
+    # Update the list to include the last two items in the list
+    status_list = status_list[-2:]
+
+    # Only send the email when the object leaves the view
+    if status_list[0] == 1 and status_list[1] == 0:
+        send_email()
+
+    print(status_list)
 
     # Display the images
     cv2.imshow("Video", frame)
