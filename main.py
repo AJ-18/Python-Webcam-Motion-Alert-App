@@ -1,5 +1,6 @@
 import cv2
 import time
+import glob
 from emailing import send_email
 
 video = cv2.VideoCapture(0)
@@ -9,6 +10,7 @@ time.sleep(1)
 
 first_frame = None
 status_list = []
+count = 1
 
 while True:
     status = 0
@@ -50,6 +52,11 @@ while True:
         # If an object is detected and a rectangle is created, call the function
         if rectangle.any():
             status = 1
+            cv2.imwrite(f"images/{count}.png", frame)
+            count += 1
+            all_images = glob.glob("images/*.png")
+            index = int(len(all_images) / 2)
+            object_image = all_images[index]
 
 
     status_list.append(status)
