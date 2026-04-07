@@ -1,7 +1,9 @@
 import cv2
 import time
 import glob
+import os
 from emailing import send_email
+from threading import Thread
 
 video = cv2.VideoCapture(0)
 
@@ -11,6 +13,11 @@ time.sleep(1)
 first_frame = None
 status_list = []
 count = 1
+
+def clean_folder():
+    images = glob.glob("images/*.png")
+    for image in images:
+        os.remove(image)
 
 while True:
     status = 0
@@ -66,7 +73,18 @@ while True:
 
     # Only send the email when the object leaves the view
     if status_list[0] == 1 and status_list[1] == 0:
-        send_email()
+
+        # Separate thread for email
+        email_thread = Thread(target=send_email, args=(object_image, ))
+
+        # Allows the 'send_email()' function to be executed in the background
+        email_thread.daemon = True
+
+        # Clear out the images folder after an email on a separate thread
+        clean_thread = Thread(target=clean_folder)
+        clean_thread.daemon = True
+
+        email_thread.start()
 
     print(status_list)
 
@@ -81,3 +99,4 @@ while True:
         break
 
 video.release()
+clean_thread.start()
